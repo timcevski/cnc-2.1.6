@@ -100,6 +100,59 @@ CNCApp.State = {
     ]
   },
 
+  getDefaultMachineConfig: function() {
+    return {
+      name: "Стандардна Машина (5 Диспензери)",
+      systemDelayLower: 150,
+      systemDelayRaise: 150,
+      mCommandLatency: 120,
+      valveOpenCmd: "M11 P3",
+      valveCloseCmd: "M10 P3",
+      homeCommand: "G28.1 X2 Y2",
+      parkCommand: "G1 X1 Y1 F2000",
+      timeUnit: "ms",
+      decimalSeparator: ".",
+      minX: -5,
+      maxX: 350,
+      minY: -5,
+      maxY: 300,
+      moveClickSpeed: 3000,
+      dispensers: this.getDefaultDispensers()
+    };
+  },
+
+  loadDefaultMachineProfile: function(callback) {
+    var self = this;
+    try {
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', 'default_machine.json', true);
+      xhr.timeout = 2000;
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4) {
+          if (xhr.status >= 200 && xhr.status < 300 && xhr.responseText) {
+            try {
+              var parsed = JSON.parse(xhr.responseText);
+              if (parsed && Array.isArray(parsed.dispensers) && parsed.dispensers.length > 0) {
+                if (typeof callback === 'function') callback(null, parsed);
+                return;
+              }
+            } catch (err) {}
+          }
+          if (typeof callback === 'function') callback(null, self.getDefaultMachineConfig());
+        }
+      };
+      xhr.ontimeout = function() {
+        if (typeof callback === 'function') callback(null, self.getDefaultMachineConfig());
+      };
+      xhr.onerror = function() {
+        if (typeof callback === 'function') callback(null, self.getDefaultMachineConfig());
+      };
+      xhr.send();
+    } catch (e) {
+      if (typeof callback === 'function') callback(null, self.getDefaultMachineConfig());
+    }
+  },
+
   normalizeMachineConfig: function() {
     var m = this.machine;
     if (!m) return;

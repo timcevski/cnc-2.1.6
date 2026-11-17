@@ -2,7 +2,7 @@
 <html lang="mk">
 <head>
   <meta charset="UTF-8">
-  <title>CNC Dispenser V2.1.4</title>
+  <title>CNC Dispenser V2.1.6</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -222,114 +222,62 @@
     <!-- ЛЕВА КОЛОНА: ТАБЕЛА ГОРЕ + МАШИНСКИ ПАНЕЛ ДОЛУ -->
     <div id="leftColumn" class="left-column">
       
-      <!-- ШИРОК ПАНЕЛ ЗА КАЛИБРАЦИЈА НАД ТАБЕЛАТА (V2.1.5) -->
-      <div id="calibrationSidePanel" class="calib-top-panel" style="display:none;">
-        <div class="calib-panel-header">
-          <div style="display:flex;align-items:center;gap:8px;">
-            <span style="font-size:16px;">🎯</span>
-            <div>
-              <strong style="color:#0f172a;font-size:12.5px;display:block;">Калибрација на Офсети на Диспензери (V2.1.5)</strong>
-              <span style="font-size:10px;color:#b45309;">Автоматска селекција на боја, поместување со стрелки/глувче и пресметка на офсет</span>
-            </div>
-          </div>
-          <button id="btnCloseCalibPanel" type="button" class="btn btn-xs btn-danger" style="font-weight:700;padding:2px 8px;" title="Затвори и откажи">✖ Затвори</button>
-        </div>
-
-        <div class="calib-panel-body">
-          <!-- Ред 1: Избор на диспензер -->
-          <div class="calib-section">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-              <span class="calib-step-label">1. Избери дизна / боја:</span>
-              <div style="display:flex;gap:12px;align-items:center;">
-                <span id="calibPointsCountBadge" class="calib-count-badge">0 точки</span>
-                <span style="font-size:11px;color:#64748b;">Тековен офсет: <strong id="calibCurOffsetDisplay" style="color:#0f172a;font-family:monospace;background:#f1f5f9;padding:1px 6px;border-radius:4px;border:1px solid #cbd5e1;">X: 0.000, Y: 0.000</strong></span>
-              </div>
-            </div>
+      <!-- ШИРОКА, НИСКА И ПРЕГЛЕДНА ЛЕНТА ЗА КАЛИБРАЦИЈА НАД ТАБЕЛАТА (V2.1.6) -->
+      <div id="calibrationSidePanel" class="calib-top-bar" style="display:none;">
+        <!-- РЕД 1: Избор на дизна, броеви и статус -->
+        <div class="calib-row-main">
+          <div class="calib-inline-group">
+            <span class="calib-title-badge">🎯 Калибрација:</span>
             <div id="calibDispenserBtnGroup" class="calib-disp-btn-group"></div>
           </div>
-
-          <!-- Ред 2: Избор на ситуација (2 картички рамо до рамо со полна ширина) -->
-          <div class="calib-section">
-            <span class="calib-step-label" style="display:block;margin-bottom:6px;">2. Избери ситуација:</span>
-            <div class="calib-two-col-grid">
-              <!-- Картичка 1: Дизната бега -->
-              <label class="calib-radio-card" id="calibCardMode1">
-                <input type="radio" name="calibMode" id="calibModeNozzleShift" value="nozzle_shift" checked>
-                <div style="flex:1;">
-                  <strong style="color:#0f172a;font-size:11.5px;">1. Дизната бега на машината</strong>
-                  <p style="margin:2px 0 6px 0;font-size:10.5px;color:#64748b;line-height:1.35;">
-                    Точките на цртежот ќе останат на своето место врз сликата, а се менува само машинскиот офсет.
-                  </p>
-                  <div id="calibDirectionLogicRow" class="calib-sub-select">
-                    <span style="font-size:9.5px;color:#475569;font-weight:600;display:block;margin-bottom:2px;">Стрелките покажуваат:</span>
-                    <select id="calibDirectionLogicSelect" class="inp inp-sm" style="width:100%;font-size:10.5px;">
-                      <option value="move_nozzle">➡️ Правец каде сакам да оди дизната (Природно)</option>
-                      <option value="show_drop">🎯 Правец каде паднала капката (Инверзно)</option>
-                    </select>
-                  </div>
-                </div>
-              </label>
-
-              <!-- Картичка 2: Стар проект -->
-              <label class="calib-radio-card" id="calibCardMode2">
-                <input type="radio" name="calibMode" id="calibModeOldProject" value="old_project">
-                <div style="flex:1;">
-                  <strong style="color:#0f172a;font-size:11.5px;">2. Стар проект (погрешни точки)</strong>
-                  <p style="margin:2px 0 0 0;font-size:10.5px;color:#64748b;line-height:1.35;">
-                    Точките бегаат од сликата. Наместете ги точно врз сликата, а разликата ќе се компензира во офсетот за машината да не избега од парчето.
-                  </p>
-                </div>
-              </label>
-            </div>
-          </div>
-
-          <!-- Ред 3: Мониторинг во живо и фино дотерување -->
-          <div class="calib-section">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-              <span class="calib-step-label">3. Поместување со стрелките на тастатурата или глувче:</span>
-              <button id="btnCalibResetShift" type="button" class="btn btn-xs" title="Врати на 0">Ресетирај на нула</button>
-            </div>
-
-            <div style="display:flex;gap:12px;align-items:center;">
-              <div class="calib-live-box" style="flex:1;margin-bottom:0;">
-                <span id="calibLiveShiftVal" style="font-size:13.5px;font-weight:700;">ΔX: +0.000 mm | ΔY: +0.000 mm</span>
-              </div>
-
-              <!-- Микро-џог копчиња во панелот -->
-              <div class="calib-nudge-row" style="flex:1.2;">
-                <div class="calib-dpad-mini">
-                  <button id="btnCalibNudgeUp" type="button" class="calib-mini-btn" title="Помести нагоре">▲</button>
-                  <div style="display:flex;gap:3px;">
-                    <button id="btnCalibNudgeLeft" type="button" class="calib-mini-btn" title="Помести налево">◀</button>
-                    <button id="btnCalibNudgeRight" type="button" class="calib-mini-btn" title="Помести надесно">▶</button>
-                  </div>
-                  <button id="btnCalibNudgeDown" type="button" class="calib-mini-btn" title="Помести надолу">▼</button>
-                </div>
-                <div style="flex:1;">
-                  <span style="font-size:9.5px;color:#64748b;display:block;margin-bottom:2px;">Чекор:</span>
-                  <select id="calibStepSelect" class="inp inp-sm" style="width:100%;font-size:10.5px;">
-                    <option value="0.01">±0.01 mm</option>
-                    <option value="0.05" selected>±0.05 mm</option>
-                    <option value="0.10">±0.10 mm</option>
-                    <option value="0.50">±0.50 mm</option>
-                    <option value="1.00">±1.00 mm</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            <div id="calibModeExplainText" class="calib-explain-box" style="margin-top:6px;"></div>
+          <div class="calib-inline-group calib-stats-right">
+            <span id="calibCurOffsetDisplay" class="calib-badge calib-badge-neutral" title="Моментален машински офсет">Офсет: X=0.000, Y=0.000</span>
+            <span id="calibLiveShiftVal" class="calib-badge calib-badge-live" title="Моментално поместување во живо">ΔX: +0.000 | ΔY: +0.000</span>
+            <span id="calibPointsCountBadge" class="calib-count-badge" style="display:none;">0 точки</span>
+            <button id="btnCalibResetShift" type="button" class="btn btn-xs" title="Ресетирај го тековното поместување назад на 0">↺ Ресет</button>
           </div>
         </div>
 
-        <!-- ГОЛЕМИ И ЈАСНИ КОПЧИЊА ЗА АКЦИЈА НА ДНОТО -->
-        <div class="calib-action-bar">
-          <button id="btnCalibCancel" type="button" class="calib-btn-cancel">
-            ✖ Откажи (Врати сè)
-          </button>
-          <button id="btnCalibApply" type="button" class="calib-btn-apply">
-            ✅ ПОТВРДИ И СНИМИ ОФСЕТ (ОК)
-          </button>
+        <!-- РЕД 2: Режим, микро-чекор и јасни копчиња за снимање -->
+        <div class="calib-row-sub">
+          <div class="calib-inline-group">
+            <label style="font-weight:700;font-size:11px;color:#0f172a;">Режим:</label>
+            <select id="calibModeSelect" class="inp inp-sm" style="font-size:11px;font-weight:600;max-width:330px;" title="Изберете режим на калибрација">
+              <option value="nozzle_shift_natural">1. Дизната бега на машина (➡️ Стрелка = дизна десно)</option>
+              <option value="nozzle_shift_inverse">1. Дизната бега на машина (🎯 Стрелка = капката паднала таму)</option>
+              <option value="old_project">2. Стар проект (Компензирај офсет за машината да остане на исто место)</option>
+            </select>
+          </div>
+
+          <!-- Стрелки за микро-поместување -->
+          <div class="calib-inline-group calib-nudge-group">
+            <div class="calib-arrows">
+              <button id="btnCalibNudgeLeft" type="button" class="calib-nudge-btn" title="Помести налево (◀)">◀</button>
+              <button id="btnCalibNudgeUp" type="button" class="calib-nudge-btn" title="Помести нагоре (▲)">▲</button>
+              <button id="btnCalibNudgeDown" type="button" class="calib-nudge-btn" title="Помести надолу (▼)">▼</button>
+              <button id="btnCalibNudgeRight" type="button" class="calib-nudge-btn" title="Помести надесно (▶)">▶</button>
+            </div>
+            <select id="calibStepSelect" class="inp inp-sm" style="width:72px;font-size:10.5px;" title="Чекор на поместување">
+              <option value="0.01">0.01mm</option>
+              <option value="0.05" selected>0.05mm</option>
+              <option value="0.10">0.10mm</option>
+              <option value="0.50">0.50mm</option>
+              <option value="1.00">1.00mm</option>
+            </select>
+          </div>
+
+          <!-- ЈАСНИ, ГОЛЕМИ И ПРЕГЛЕДНИ КОПЧИЊА: ОК, СЛЕДЕН, ОТКАЖИ -->
+          <div class="calib-inline-group calib-actions-right">
+            <button id="btnCalibApplyNext" type="button" class="btn btn-sm btn-calib-next" title="Сними го тековниот диспензер и веднаш продолжи на следниот без затворање">
+              💾 Сними и Следен ➡️
+            </button>
+            <button id="btnCalibApply" type="button" class="btn btn-sm btn-calib-save" title="Сними го новиот офсет (ОК) и заврши">
+              ✔ Сними (ОК)
+            </button>
+            <button id="btnCalibCancel" type="button" class="btn btn-sm btn-calib-cancel" title="Откажи незачувано и затвори">
+              ✖ Затвори
+            </button>
+          </div>
         </div>
       </div>
 

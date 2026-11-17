@@ -67,7 +67,8 @@ export default function App() {
         'SPECIFICATION.md',
         'DEVELOPER_NOTES.md',
         'V2_TECHNICAL_PLAN.md',
-        'ANALIZA_CNC_DISPENSER_V2.1.4.md'
+        'ANALIZA_CNC_DISPENSER_V2.1.4.md',
+        'default_machine.json'
       ];
 
       for (const filePath of filesToInclude) {
@@ -103,7 +104,7 @@ export default function App() {
       const downloadUrl = URL.createObjectURL(blob);
       const tempLink = document.createElement('a');
       tempLink.href = downloadUrl;
-      tempLink.download = 'CNC-Dispenser-V2.1.5.zip';
+      tempLink.download = 'CNC-Dispenser-V2.1.6.zip';
       document.body.appendChild(tempLink);
       tempLink.click();
       document.body.removeChild(tempLink);
@@ -127,14 +128,14 @@ export default function App() {
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="font-bold text-sm text-slate-100 tracking-wide">
-                  CNC Dispenser V2.1.5
+                  CNC Dispenser V2.1.6
                 </h1>
                 <span className="text-[11px] bg-emerald-500/20 text-emerald-300 font-semibold px-2 py-0.5 rounded border border-emerald-500/30">
-                  ⚡ V2.1.5 (Лев страничен панел за калибрација на дизни и стар проект)
+                  ⚡ V2.1.6 (Лев страничен панел за калибрација на дизни и стар проект)
                 </span>
               </div>
               <p className="text-[11px] text-slate-400">
-                <strong className="text-emerald-300">CNC Dispenser V2.1.5</strong>: Додадено копче „Калибрација“ со мал лев страничен панел што не го заклонува графикот (автоматска изолација на бои, избор на природна насока и компензација).
+                <strong className="text-emerald-300">CNC Dispenser V2.1.6</strong>: Додадено копче „Калибрација“ со мал лев страничен панел што не го заклонува графикот (автоматска изолација на бои, избор на природна насока и компензација).
               </p>
             </div>
           </div>
@@ -169,7 +170,7 @@ export default function App() {
               ) : (
                 <Download className="w-3.5 h-3.5" />
               )}
-              <span>{isDownloadingZip ? 'Се подготвува ZIP...' : 'Симни ZIP за USB (V2.1.4)'}</span>
+              <span>{isDownloadingZip ? 'Се подготвува ZIP...' : 'Симни ZIP за USB (V2.1.6)'}</span>
             </button>
 
             <button
@@ -207,7 +208,7 @@ export default function App() {
         <iframe
           ref={iframeRef}
           src="/cnc/index.html"
-          title="CNC Dispenser V2.1.4"
+          title="CNC Dispenser V2.1.6"
           className="w-full h-full border-0 block"
         />
       </main>
@@ -233,7 +234,7 @@ export default function App() {
               <p>
                 <strong>1. Апликацијата е 100% жива:</strong>
                 <br />
-                Она што го гледате на екранот е токму вашата апликација <em>CNC Dispenser V2.1.4</em>. Можете да вчитувате TXT, CSV, да влечете точки на графикот, да менувате параметри и да експортирате G-код (.tap).
+                Она што го гледате на екранот е токму вашата апликација <em>CNC Dispenser V2.1.6</em>. Можете да вчитувате TXT, CSV, да влечете точки на графикот, да менувате параметри и да експортирате G-код (.tap).
               </p>
 
               <p>

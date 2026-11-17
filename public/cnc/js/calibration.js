@@ -1,6 +1,6 @@
 /**
- * CNC Dispenser V2.1.5 - Calibration & Offset Manager
- * Мал лев страничен панел за прецизна калибрација на дизни и офсети
+ * CNC Dispenser V2.1.6 - Calibration & Offset Manager
+ * Широка, ниска и прегледна лента над табелата за прецизна калибрација на дизни и офсети
  */
 
 (function() {
@@ -11,8 +11,7 @@
   var Calibration = {
     active: false,
     activeDispenserId: 1,
-    mode: 'nozzle_shift', // 'nozzle_shift' (Опција 1) или 'old_project' (Опција 2)
-    directionLogic: 'move_nozzle', // 'move_nozzle' (природно) или 'show_drop' (инверзно)
+    mode: 'nozzle_shift_natural', // 'nozzle_shift_natural', 'nozzle_shift_inverse', 'old_project'
     nudgeStep: 0.05, // mm
     deltaX: 0.0,
     deltaY: 0.0,
@@ -38,15 +37,7 @@
         };
       }
 
-      // Копче ✕ во заглавието на панелот
-      var btnCloseHeader = document.getElementById('btnCloseCalibPanel');
-      if (btnCloseHeader) {
-        btnCloseHeader.onclick = function() {
-          self.cancel();
-        };
-      }
-
-      // Копче [ ✖ Откажи ]
+      // Копче [ ✖ Затвори ]
       var btnCancel = document.getElementById('btnCalibCancel');
       if (btnCancel) {
         btnCancel.onclick = function() {
@@ -54,40 +45,28 @@
         };
       }
 
-      // Копче [ ✅ Потврди (ОК) ]
+      // Копче [ ✔ Сними (ОК) ]
       var btnApply = document.getElementById('btnCalibApply');
       if (btnApply) {
         btnApply.onclick = function() {
-          self.applyAndSave();
+          self.applyCurrentDispenser(false);
         };
       }
 
-      // Радио опции за режим
-      var rMode1 = document.getElementById('calibModeNozzleShift');
-      var rMode2 = document.getElementById('calibModeOldProject');
-
-      if (rMode1) {
-        rMode1.onchange = function() {
-          if (rMode1.checked) {
-            self.mode = 'nozzle_shift';
-            self.updateUI();
-          }
-        };
-      }
-      if (rMode2) {
-        rMode2.onchange = function() {
-          if (rMode2.checked) {
-            self.mode = 'old_project';
-            self.updateUI();
-          }
+      // Копче [ 💾 Сними и Следен ➡️ ]
+      var btnApplyNext = document.getElementById('btnCalibApplyNext');
+      if (btnApplyNext) {
+        btnApplyNext.onclick = function() {
+          self.applyAndNext();
         };
       }
 
-      // Паѓачко мени за логика на насока (за Опција 1)
-      var selDir = document.getElementById('calibDirectionLogicSelect');
-      if (selDir) {
-        selDir.onchange = function() {
-          self.directionLogic = selDir.value;
+      // Паѓачко мени за режим
+      var selMode = document.getElementById('calibModeSelect');
+      if (selMode) {
+        selMode.onchange = function() {
+          self.mode = selMode.value;
+          self.updateUI();
         };
       }
 
@@ -99,7 +78,7 @@
         };
       }
 
-      // Копчиња за микро-џог во самиот панел
+      // Копчиња за микро-стрелки во лентата
       var bUp = document.getElementById('btnCalibNudgeUp');
       var bDown = document.getElementById('btnCalibNudgeDown');
       var bLeft = document.getElementById('btnCalibNudgeLeft');
@@ -120,7 +99,6 @@
     },
 
     open: function() {
-      var self = this;
       this.active = true;
       this.deltaX = 0.0;
       this.deltaY = 0.0;
@@ -128,10 +106,10 @@
       // Зачувај претходна состојба на сенчење (shadedDispensers)
       this.previousShadedSet = new Set(CNCApp.State.shadedDispensers || []);
 
-      // Прикажи го панелот
+      // Прикажи ја лентата
       var panel = document.getElementById('calibrationSidePanel');
       if (panel) {
-        panel.style.display = 'block';
+        panel.style.display = 'flex';
       }
 
       // Ажурирај го копчето над графикот во активна состојба
@@ -145,8 +123,9 @@
       this.renderDispenserButtons();
 
       // Автоматски селектирај го првиот или веќе избраниот диспензер
-      var firstDisp = CNCApp.State.machine.dispensers[0];
-      this.selectDispenser(this.activeDispenserId || (firstDisp ? firstDisp.id : 1));
+      var firstDisp = (CNCApp.State.machine.dispensers || [])[0];
+      var targetId = this.activeDispenserId || (firstDisp ? firstDisp.id : 1);
+      this.selectDispenser(targetId);
     },
 
     closeUI: function() {
@@ -155,7 +134,7 @@
       this.deltaY = 0.0;
       this.initialPointsMap.clear();
 
-      // Сокриј го страничниот панел
+      // Сокриј ја лентата
       var panel = document.getElementById('calibrationSidePanel');
       if (panel) {
         panel.style.display = 'none';
@@ -208,9 +187,12 @@
 
         btn.onclick = function() {
           if (self.deltaX !== 0 || self.deltaY !== 0) {
-            var conf = confirm('Имате незачувано поместување за Д' + self.activeDispenserId + '.\nСакате ли да преминете на друг диспензер без да го снимите?');
-            if (!conf) return;
-            self.revertToInitialPoints();
+            var conf = confirm('Имате незачувано поместување за Д' + self.activeDispenserId + '.\nДали сакате да го снимите пред да преминете на Д' + d.id + '?');
+            if (conf) {
+              self.applyCurrentDispenser(true);
+            } else {
+              self.revertToInitialPoints();
+            }
           }
           self.selectDispenser(d.id);
         };
@@ -220,6 +202,7 @@
     },
 
     selectDispenser: function(dispId) {
+      var self = this;
       this.activeDispenserId = dispId;
       this.deltaX = 0.0;
       this.deltaY = 0.0;
@@ -239,7 +222,7 @@
         });
       }
 
-      // ИЗОЛАЦИЈА: Другите бои стануваат полупроѕирни (shaded), а избраната свети 100%
+      // ИЗОЛАЦИЈА: Другите бои влегуваат во shadedDispensers (во Canvas се 100% скриени во режим на калибрација!)
       CNCApp.State.shadedDispensers.clear();
       (CNCApp.State.machine.dispensers || []).forEach(function(otherD) {
         if (otherD.id !== dispId) {
@@ -274,36 +257,20 @@
 
       var lblCurOffset = document.getElementById('calibCurOffsetDisplay');
       if (lblCurOffset) {
-        lblCurOffset.textContent = 'X: ' + (d.offsetX || 0).toFixed(3) + ' mm, Y: ' + (d.offsetY || 0).toFixed(3) + ' mm';
+        lblCurOffset.textContent = 'Офсет: X=' + (d.offsetX || 0).toFixed(3) + ', Y=' + (d.offsetY || 0).toFixed(3);
       }
 
       var lblShift = document.getElementById('calibLiveShiftVal');
       if (lblShift) {
         var sX = (this.deltaX > 0 ? '+' : '') + this.deltaX.toFixed(3);
         var sY = (this.deltaY > 0 ? '+' : '') + this.deltaY.toFixed(3);
-        lblShift.textContent = 'ΔX: ' + sX + ' mm | ΔY: ' + sY + ' mm';
-        lblShift.style.color = (this.deltaX !== 0 || this.deltaY !== 0) ? '#059669' : '#64748b';
+        lblShift.textContent = 'ΔX: ' + sX + ' | ΔY: ' + sY;
+        lblShift.className = 'calib-badge ' + ((this.deltaX !== 0 || this.deltaY !== 0) ? 'calib-badge-live' : 'calib-badge-neutral');
       }
 
       var lblCount = document.getElementById('calibPointsCountBadge');
       if (lblCount) {
         lblCount.textContent = this.initialPointsMap.size + ' точки';
-      }
-
-      // Покажи/сокриј го паѓачкото мени за насока зависно од режимот
-      var dirRow = document.getElementById('calibDirectionLogicRow');
-      if (dirRow) {
-        dirRow.style.display = (this.mode === 'nozzle_shift') ? 'block' : 'none';
-      }
-
-      // Објаснување во живо
-      var hint = document.getElementById('calibModeExplainText');
-      if (hint) {
-        if (this.mode === 'nozzle_shift') {
-          hint.innerHTML = '<strong>Опција 1:</strong> Поместете ги точките со стрелките на тастатурата или глувчето. Кога ќе кликнете ОК, точките <em>се враќаат на своето место врз сликата</em>, а се ажурира само офсетот на дизната.';
-        } else {
-          hint.innerHTML = '<strong>Опција 2:</strong> Поместете ги точките <em>точно врз сликата</em>. Кога ќе кликнете ОК, точките остануваат на сликата, а офсетот на дизната се компензира за машината да остане на истата позиција.';
-        }
       }
     },
 
@@ -316,11 +283,10 @@
       this.updateUI();
     },
 
-    // Копчиња за микро-џог во самиот панел
+    // Копчиња за микро-џог во самата лента
     nudge: function(dx, dy) {
       if (!this.active || this.initialPointsMap.size === 0) return;
 
-      var self = this;
       this.initialPointsMap.forEach(function(initPos, idx) {
         var p = CNCApp.State.points[idx];
         if (p) {
@@ -353,13 +319,13 @@
       this.updateUI();
     },
 
-    applyAndSave: function() {
+    applyCurrentDispenser: function(stayInCalib) {
       var d = (CNCApp.State.machine.dispensers || []).find(function(item) {
         return item.id === this.activeDispenserId;
       }.bind(this));
 
       if (!d) {
-        this.closeUI();
+        if (!stayInCalib) this.closeUI();
         return;
       }
 
@@ -367,8 +333,10 @@
       var dy = this.deltaY;
 
       if (dx === 0 && dy === 0) {
-        alert('ℹ️ Нема направено никакво поместување.');
-        this.closeUI();
+        if (!stayInCalib) {
+          alert('ℹ️ Нема направено никакво поместување за Д' + d.id + '.');
+          this.closeUI();
+        }
         return;
       }
 
@@ -379,9 +347,11 @@
       var finalNewOffsetX = oldOffsetX;
       var finalNewOffsetY = oldOffsetY;
 
-      if (this.mode === 'nozzle_shift') {
-        // ОПЦИЈА 1: Дизната бегала на машината. Точките на цртежот ОСТАНУВААТ НА СЛИКАТА!
-        // Врати ги точките на нивните оригинални позиции врз сликата:
+      var selModeEl = document.getElementById('calibModeSelect');
+      var chosenMode = selModeEl ? selModeEl.value : this.mode;
+
+      if (chosenMode === 'nozzle_shift_natural') {
+        // ОПЦИЈА 1 Природно: Точките на цртежот се враќаат на своето место врз сликата!
         this.initialPointsMap.forEach(function(initPos, idx) {
           var p = CNCApp.State.points[idx];
           if (p) {
@@ -390,45 +360,42 @@
             CNCApp.Table.updateRow(idx);
           }
         });
-
-        // Пресметај нов офсет според логиката на насока:
-        if (this.directionLogic === 'move_nozzle') {
-          // Стрелка десно = дизна десно (+dx)
-          finalNewOffsetX = parseFloat((oldOffsetX + dx).toFixed(3));
-          finalNewOffsetY = parseFloat((oldOffsetY + dy).toFixed(3));
-        } else {
-          // Стрелка десно = капката паднала десно -> дизната се враќа лево (-dx)
-          finalNewOffsetX = parseFloat((oldOffsetX - dx).toFixed(3));
-          finalNewOffsetY = parseFloat((oldOffsetY - dy).toFixed(3));
-        }
-
-        d.offsetX = finalNewOffsetX;
-        d.offsetY = finalNewOffsetY;
-
-        this.notifySuccess(
-          'Успешна калибрација на дизната за ' + d.name + '!\n\n' +
-          '• Точките на цртежот останаа совршено на своето место врз сликата.\n' +
-          '• Стар офсет: X=' + oldOffsetX.toFixed(3) + ', Y=' + oldOffsetY.toFixed(3) + ' mm\n' +
-          '• Нов офсет: X=' + finalNewOffsetX.toFixed(3) + ', Y=' + finalNewOffsetY.toFixed(3) + ' mm'
-        );
-
-      } else {
-        // ОПЦИЈА 2: Стар проект. Точките се погрешни и СЕГА СЕ ПОРАМНЕТИ СО СЛИКАТА.
-        // Точките ОСТАНУВААТ на новата поместена позиција врз сликата!
-        // А офсетот се компензира во спротивна насока (-dx, -dy) за физичката позиција на машината да остане идентична:
+        // Стрелка десно = дизна десно (+dx)
+        finalNewOffsetX = parseFloat((oldOffsetX + dx).toFixed(3));
+        finalNewOffsetY = parseFloat((oldOffsetY + dy).toFixed(3));
+      } else if (chosenMode === 'nozzle_shift_inverse') {
+        // ОПЦИЈА 1 Инверзно: Капката паднала таму, дизната оди спротивно
+        this.initialPointsMap.forEach(function(initPos, idx) {
+          var p = CNCApp.State.points[idx];
+          if (p) {
+            p.x = initPos.x;
+            p.y = initPos.y;
+            CNCApp.Table.updateRow(idx);
+          }
+        });
         finalNewOffsetX = parseFloat((oldOffsetX - dx).toFixed(3));
         finalNewOffsetY = parseFloat((oldOffsetY - dy).toFixed(3));
-
-        d.offsetX = finalNewOffsetX;
-        d.offsetY = finalNewOffsetY;
-
-        this.notifySuccess(
-          'Успешно усогласување на стар проект за ' + d.name + '!\n\n' +
-          '• Точките остануваат на новата порамнета позиција врз сликата.\n' +
-          '• Офсетот е компензиран: X=' + finalNewOffsetX.toFixed(3) + ', Y=' + finalNewOffsetY.toFixed(3) + ' mm.\n' +
-          '• Машината ќе продолжи да нанесува на точното физичко место на парчето!'
-        );
+      } else {
+        // ОПЦИЈА 2 Стар проект: Точките остануваат на новата порамнета позиција!
+        // Офсетот се компензира во спротивна насока (-dx, -dy) за физичката позиција на машината да остане идентична:
+        finalNewOffsetX = parseFloat((oldOffsetX - dx).toFixed(3));
+        finalNewOffsetY = parseFloat((oldOffsetY - dy).toFixed(3));
       }
+
+      d.offsetX = finalNewOffsetX;
+      d.offsetY = finalNewOffsetY;
+
+      // Ажурирај ја мапата со нови позиции
+      var self = this;
+      this.initialPointsMap.forEach(function(_, idx) {
+        var p = CNCApp.State.points[idx];
+        if (p) {
+          self.initialPointsMap.set(idx, { x: p.x, y: p.y });
+        }
+      });
+
+      this.deltaX = 0.0;
+      this.deltaY = 0.0;
 
       // Зачувај во локално складиште и синхронизирај со Mach3
       CNCApp.Storage.saveAutoSave();
@@ -436,11 +403,42 @@
         CNCApp.Mach3BridgeDriver.syncConfig();
       }
 
-      this.closeUI();
+      this.updateUI();
+      CNCApp.Canvas.render();
+
+      if (!stayInCalib) {
+        alert(
+          '✅ Успешна калибрација за Д' + d.id + ' (' + d.name + ')!\n\n' +
+          '• Стар офсет: X=' + oldOffsetX.toFixed(3) + ', Y=' + oldOffsetY.toFixed(3) + ' mm\n' +
+          '• Нов офсет: X=' + finalNewOffsetX.toFixed(3) + ', Y=' + finalNewOffsetY.toFixed(3) + ' mm'
+        );
+        this.closeUI();
+      }
     },
 
-    notifySuccess: function(msg) {
-      alert('✅ ' + msg);
+    applyAndNext: function() {
+      // Прво сними го тековниот диспензер доколку има поместување
+      if (this.deltaX !== 0 || this.deltaY !== 0) {
+        this.applyCurrentDispenser(true);
+      }
+
+      // Најди го следниот диспензер
+      var dispensers = CNCApp.State.machine.dispensers || [];
+      if (dispensers.length === 0) return;
+
+      var curIdx = 0;
+      for (var i = 0; i < dispensers.length; i++) {
+        if (dispensers[i].id === this.activeDispenserId) {
+          curIdx = i;
+          break;
+        }
+      }
+
+      var nextIdx = (curIdx + 1) % dispensers.length;
+      var nextDisp = dispensers[nextIdx];
+
+      // Селектирај го следниот диспензер без затворање на панелот!
+      this.selectDispenser(nextDisp.id);
     }
   };
 

@@ -1085,7 +1085,8 @@ canvas { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
 }
 
 /* ========================================================
-   ШИРОК ПАНЕЛ ЗА КАЛИБРАЦИЈА НАД ТАБЕЛАТА (V2.1.5)
+/* ========================================================
+   ШИРОКА, НИСКА И ПРЕГЛЕДНА ЛЕНТА ЗА КАЛИБРАЦИЈА (V2.1.6)
    ======================================================== */
 .btn-calibration {
   background: #fef3c7;
@@ -1109,81 +1110,76 @@ canvas { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
   box-shadow: 0 0 0 2px rgba(217, 119, 6, 0.35);
 }
 
-.calib-top-panel {
+.calib-top-bar {
   width: 100%;
-  background: #ffffff;
-  border-bottom: 3px solid #f59e0b;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+  background: #fffdf5;
+  border-bottom: 2px solid #f59e0b;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
   flex-shrink: 0;
   z-index: 25;
   font-size: 11.5px;
   display: flex;
   flex-direction: column;
+  padding: 5px 8px;
+  gap: 4px;
+  box-sizing: border-box;
 }
-.calib-panel-header {
-  padding: 8px 12px;
-  background: #fffbeb;
-  border-bottom: 1px solid #fde68a;
+
+.calib-row-main,
+.calib-row-sub {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 6px;
+  flex-wrap: nowrap;
 }
-.calib-panel-body {
-  padding: 8px 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
-  overflow-y: auto;
-  max-height: 48vh;
-}
-.calib-section {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  padding: 7px 10px;
-}
-.calib-step-label {
-  font-weight: 700;
-  color: #0f172a;
-  font-size: 11px;
-}
-.calib-count-badge {
-  background: #e2e8f0;
-  color: #475569;
-  font-size: 10px;
-  font-weight: 700;
-  padding: 1px 7px;
-  border-radius: 10px;
-}
-.calib-disp-btn-group {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-  margin-top: 4px;
-}
-.calib-disp-btn {
-  background: #ffffff;
-  border: 1px solid #cbd5e1;
-  border-radius: 5px;
-  padding: 4px 9px;
-  font-size: 11px;
+
+.calib-inline-group {
   display: flex;
   align-items: center;
   gap: 5px;
+}
+
+.calib-title-badge {
+  font-weight: 800;
+  color: #92400e;
+  font-size: 11.5px;
+  white-space: nowrap;
+}
+
+.calib-disp-btn-group {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.calib-disp-btn {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
   cursor: pointer;
   transition: 0.15s;
+  white-space: nowrap;
 }
+
 .calib-disp-btn:hover {
-  background: #f1f5f9;
+  background: #f8fafc;
   border-color: #94a3b8;
 }
+
 .calib-disp-btn.active {
   background: #eff6ff;
-  border-color: #3b82f6;
+  border-color: #2563eb;
   color: #1d4ed8;
   font-weight: 700;
-  box-shadow: 0 0 0 1.5px rgba(59, 130, 246, 0.4);
+  box-shadow: 0 0 0 1.5px rgba(37, 99, 235, 0.35);
 }
+
 .calib-disp-dot {
   width: 8px;
   height: 8px;
@@ -1191,129 +1187,98 @@ canvas { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
   display: inline-block;
   flex-shrink: 0;
 }
-.calib-two-col-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
+
+.calib-stats-right,
+.calib-actions-right {
+  margin-left: auto;
 }
-.calib-radio-card {
-  display: flex;
-  align-items: flex-start;
-  gap: 7px;
-  background: #ffffff;
-  border: 1px solid #cbd5e1;
-  border-radius: 6px;
-  padding: 7px 9px;
-  cursor: pointer;
-  transition: 0.15s;
-}
-.calib-radio-card:hover {
-  background: #f8fafc;
-  border-color: #94a3b8;
-}
-.calib-radio-card input {
-  margin-top: 2px;
-  cursor: pointer;
-}
-.calib-sub-select {
-  margin: 4px 0 0 0;
-  background: #f1f5f9;
-  border: 1px solid #cbd5e1;
+
+.calib-badge {
+  padding: 2px 6px;
   border-radius: 4px;
-  padding: 4px 6px;
-}
-.calib-live-box {
-  background: #ffffff;
-  border: 1px solid #cbd5e1;
-  border-radius: 5px;
-  padding: 6px 10px;
-  text-align: center;
   font-family: monospace;
-  font-size: 13px;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.calib-badge-neutral {
+  background: #f1f5f9;
+  color: #334155;
+  border: 1px solid #cbd5e1;
+}
+
+.calib-badge-live {
+  background: #ecfdf5;
+  color: #047857;
   font-weight: 700;
-  color: #059669;
+  border: 1px solid #a7f3d0;
 }
-.calib-nudge-row {
+
+.calib-arrows {
   display: flex;
-  gap: 8px;
-  align-items: center;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 5px;
-  padding: 5px 8px;
-}
-.calib-dpad-mini {
-  display: flex;
-  flex-direction: column;
   align-items: center;
   gap: 2px;
 }
-.calib-mini-btn {
-  width: 25px;
+
+.calib-nudge-btn {
+  width: 22px;
   height: 22px;
-  border-radius: 3px;
+  background: #ffffff;
   border: 1px solid #cbd5e1;
-  background: #f8fafc;
-  color: #0f172a;
+  border-radius: 3px;
   font-size: 10px;
-  font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  color: #0f172a;
 }
-.calib-mini-btn:hover {
-  background: #e2e8f0;
+
+.calib-nudge-btn:hover {
+  background: #f1f5f9;
   border-color: #94a3b8;
 }
-.calib-mini-btn:active {
-  background: #cbd5e1;
+
+.calib-nudge-btn:active {
+  background: #e2e8f0;
   transform: translateY(1px);
 }
-.calib-explain-box {
-  font-size: 10.5px;
-  color: #1e40af;
-  line-height: 1.4;
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
-  border-radius: 4px;
-  padding: 6px 9px;
-}
-.calib-action-bar {
-  display: flex;
-  gap: 10px;
-  padding: 9px 12px;
-  background: #f1f5f9;
-  border-top: 1px solid #cbd5e1;
-}
-.calib-btn-cancel {
-  flex: 1;
-  padding: 8px 12px;
-  font-size: 12px;
-  font-weight: 700;
-  background: #fee2e2;
-  border: 1px solid #fca5a5;
-  color: #991b1b;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: 0.15s;
-}
-.calib-btn-cancel:hover {
-  background: #fecaca;
-}
-.calib-btn-apply {
-  flex: 2;
-  padding: 8px 16px;
-  font-size: 12.5px;
-  font-weight: 800;
+
+.btn-calib-save {
   background: #10b981;
-  border: 1px solid #059669;
+  border-color: #059669;
   color: #ffffff;
-  border-radius: 5px;
+  font-weight: 700;
+  padding: 3px 9px;
+  font-size: 11px;
   cursor: pointer;
-  transition: 0.15s;
-  box-shadow: 0 1px 3px rgba(16, 185, 129, 0.3);
 }
-.calib-btn-apply:hover {
+.btn-calib-save:hover {
   background: #059669;
+}
+
+.btn-calib-next {
+  background: #0284c7;
+  border-color: #0369a1;
+  color: #ffffff;
+  font-weight: 700;
+  padding: 3px 9px;
+  font-size: 11px;
+  cursor: pointer;
+}
+.btn-calib-next:hover {
+  background: #0369a1;
+}
+
+.btn-calib-cancel {
+  background: #fee2e2;
+  border-color: #fca5a5;
+  color: #991b1b;
+  font-weight: 600;
+  padding: 3px 8px;
+  font-size: 11px;
+  cursor: pointer;
+}
+.btn-calib-cancel:hover {
+  background: #fecaca;
 }

@@ -142,6 +142,21 @@ CNCApp.Canvas = {
           return;
         }
 
+        if (CNCApp.Calibration && CNCApp.Calibration.active) {
+          // Во режим на калибрација, сите точки од избраниот диспензер СЕКОГАШ остануваат селектирани
+          // и се влечат исклучиво заедно како една целина!
+          this.isDragging = true;
+          this.draggedIndex = idx !== null ? idx : 0;
+          this.dragStartMouse = { x: mouse.x, y: mouse.y };
+          this.dragStartPoints.clear();
+          CNCApp.State.selectedIndices.forEach(sIdx => {
+            const p = CNCApp.State.points[sIdx];
+            if (p) this.dragStartPoints.set(sIdx, { x: p.x, y: p.y });
+          });
+          this.render();
+          return;
+        }
+
         if (idx !== null) {
           CNCApp.State.activePointIndex = idx;
           if (!e.ctrlKey && !e.shiftKey && !CNCApp.State.selectedIndices.has(idx)) {
@@ -257,7 +272,9 @@ CNCApp.Canvas = {
     const threshold = 8 / this.scale;
     for (let i = CNCApp.State.points.length - 1; i >= 0; i--) {
       const p = CNCApp.State.points[i];
-      if (CNCApp.State.shadedDispensers && CNCApp.State.shadedDispensers.has(p.dispenser)) {
+      if (CNCApp.Calibration && CNCApp.Calibration.active) {
+        if (p.dispenser !== CNCApp.Calibration.activeDispenserId) continue;
+      } else if (CNCApp.State.shadedDispensers && CNCApp.State.shadedDispensers.has(p.dispenser)) {
         continue;
       }
       const dist = Math.hypot(p.x - wx, p.y - wy);
@@ -297,7 +314,11 @@ CNCApp.Canvas = {
     const activeVisiblePts = [];
     pts.forEach((p, idx) => {
       if (!p.active) return;
-      if (CNCApp.State.shadedDispensers && CNCApp.State.shadedDispensers.has(p.dispenser)) return;
+      if (CNCApp.Calibration && CNCApp.Calibration.active) {
+        if (p.dispenser !== CNCApp.Calibration.activeDispenserId) return;
+      } else if (CNCApp.State.shadedDispensers && CNCApp.State.shadedDispensers.has(p.dispenser)) {
+        return;
+      }
       activeVisiblePts.push({ p, idx, sp: this.worldToScreen(p.x, p.y) });
     });
 
@@ -346,6 +367,10 @@ CNCApp.Canvas = {
     }
 
     pts.forEach((p, idx) => {
+      if (CNCApp.Calibration && CNCApp.Calibration.active) {
+        if (p.dispenser !== CNCApp.Calibration.activeDispenserId) return;
+      }
+
       const sp = this.worldToScreen(p.x, p.y);
       const isSel = CNCApp.State.selectedIndices.has(idx);
       const isAct = CNCApp.State.activePointIndex === idx;

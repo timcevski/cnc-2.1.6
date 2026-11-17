@@ -543,14 +543,18 @@ document.addEventListener('DOMContentLoaded', function() {
     const tag = document.activeElement ? document.activeElement.tagName : '';
     if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
 
-    if (e.key && e.key.indexOf('Arrow') === 0 && CNCApp.Machine && typeof CNCApp.Machine.handleKeyboardArrow === 'function') {
-      if (CNCApp.Machine.handleKeyboardArrow(e)) return;
+    if (!(CNCApp.Calibration && CNCApp.Calibration.active)) {
+      if (e.key && e.key.indexOf('Arrow') === 0 && CNCApp.Machine && typeof CNCApp.Machine.handleKeyboardArrow === 'function') {
+        if (CNCApp.Machine.handleKeyboardArrow(e)) return;
+      }
     }
 
     if (CNCApp.State.isActiveTabReadOnly && CNCApp.State.isActiveTabReadOnly()) return;
     if (CNCApp.State.selectedIndices.size === 0) return;
 
-    const step = CNCApp.State.stepIncrement || 0.05;
+    const step = (CNCApp.Calibration && CNCApp.Calibration.active && CNCApp.Calibration.nudgeStep)
+      ? CNCApp.Calibration.nudgeStep
+      : (CNCApp.State.stepIncrement || 0.05);
     let dx = 0, dy = 0;
     if (e.key === 'ArrowUp') dy = step;
     else if (e.key === 'ArrowDown') dy = -step;
@@ -1248,37 +1252,36 @@ document.addEventListener('DOMContentLoaded', function() {
   const btnResetCal = document.getElementById('btnResetCalibratedDispensers');
   if (btnResetCal) {
     btnResetCal.onclick = () => {
-      CNCApp.State.machine.dispensers = CNCApp.State.getDefaultDispensers();
-      CNCApp.State.machine.valveOpenCmd = "M11 P3";
-      CNCApp.State.machine.valveCloseCmd = "M10 P3";
-      CNCApp.State.machine.homeCommand = "G28.1 X2 Y2";
-      CNCApp.State.machine.parkCommand = "G1 X1 Y1 F2000";
-      CNCApp.State.machine.minX = -5;
-      CNCApp.State.machine.maxX = 350;
-      CNCApp.State.machine.minY = -5;
-      CNCApp.State.machine.maxY = 300;
-      CNCApp.State.machine.moveClickSpeed = 3000;
-      CNCApp.State.footer = "G28.1 X2 Y2\r\nG1 X1 Y1 F2000\r\nM5\r\nM30";
-      document.getElementById('modalFooterCode').value = CNCApp.State.footer;
-      document.getElementById('modalValveOpenCmd').value = CNCApp.State.machine.valveOpenCmd;
-      document.getElementById('modalValveCloseCmd').value = CNCApp.State.machine.valveCloseCmd;
-      document.getElementById('modalHomeCmd').value = CNCApp.State.machine.homeCommand;
-      document.getElementById('modalParkCmd').value = CNCApp.State.machine.parkCommand;
-      document.getElementById('modalMinX').value = CNCApp.State.machine.minX;
-      document.getElementById('modalMaxX').value = CNCApp.State.machine.maxX;
-      document.getElementById('modalMinY').value = CNCApp.State.machine.minY;
-      document.getElementById('modalMaxY').value = CNCApp.State.machine.maxY;
-      document.getElementById('modalMoveClickSpeed').value = CNCApp.State.machine.moveClickSpeed;
-      renderSettingsDispensers();
-      refreshToolbarStates();
-      CNCApp.Canvas.render();
-      CNCApp.Storage.saveAutoSave();
-      if (CNCApp.Machine && CNCApp.Machine.activeDriverId === 'mach3' && CNCApp.Mach3BridgeDriver && CNCApp.Mach3BridgeDriver.connected) {
-        CNCApp.Mach3BridgeDriver.syncConfig();
-      }
-      if (CNCApp.Machine && typeof CNCApp.Machine.refreshUI === 'function') {
-        CNCApp.Machine.refreshUI();
-      }
+      CNCApp.State.loadDefaultMachineProfile((err, defMachine) => {
+        if (defMachine) {
+          CNCApp.State.machine = JSON.parse(JSON.stringify(defMachine));
+        } else {
+          CNCApp.State.machine = CNCApp.State.getDefaultMachineConfig();
+        }
+        CNCApp.State.footer = "G28.1 X2 Y2\r\nG1 X1 Y1 F2000\r\nM5\r\nM30";
+        document.getElementById('modalFooterCode').value = CNCApp.State.footer;
+        document.getElementById('modalValveOpenCmd').value = CNCApp.State.machine.valveOpenCmd;
+        document.getElementById('modalValveCloseCmd').value = CNCApp.State.machine.valveCloseCmd;
+        document.getElementById('modalHomeCmd').value = CNCApp.State.machine.homeCommand;
+        document.getElementById('modalParkCmd').value = CNCApp.State.machine.parkCommand;
+        document.getElementById('modalMinX').value = CNCApp.State.machine.minX;
+        document.getElementById('modalMaxX').value = CNCApp.State.machine.maxX;
+        document.getElementById('modalMinY').value = CNCApp.State.machine.minY;
+        document.getElementById('modalMaxY').value = CNCApp.State.machine.maxY;
+        document.getElementById('modalMoveClickSpeed').value = CNCApp.State.machine.moveClickSpeed;
+        renderSettingsDispensers();
+        refreshToolbarStates();
+        CNCApp.Table.render();
+        CNCApp.Canvas.render();
+        CNCApp.Storage.saveAutoSave();
+        if (CNCApp.Machine && CNCApp.Machine.activeDriverId === 'mach3' && CNCApp.Mach3BridgeDriver && CNCApp.Mach3BridgeDriver.connected) {
+          CNCApp.Mach3BridgeDriver.syncConfig();
+        }
+        if (CNCApp.Machine && typeof CNCApp.Machine.refreshUI === 'function') {
+          CNCApp.Machine.refreshUI();
+        }
+        alert('⚡ Успешно се вчитани фабричките поставки на машината од default_machine.json!');
+      });
     };
   }
 

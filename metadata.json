@@ -1,6 +1,6 @@
 {
-  "name": "GitHub Project Importer",
-  "description": "Повлекување, анализа и надградба на проекти од GitHub.",
+  "name": "CNC Dispenser V2.1.6",
+  "description": "CNC Dispenser V2.1.6 - Софтвер за контрола и G-код генератор за повеќеканални пневматски CNC диспензери.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
